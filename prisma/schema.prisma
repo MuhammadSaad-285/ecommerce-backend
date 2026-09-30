@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String
+  password String
+  email    String
+  feedback String
+}
+
+model Feedback {
+  id       Int    @id @default(autoincrement())
+  feedback String
+  userid   Int
+  user     Users  @relation(fields: [userid], references: [id], onDelete: Cascade)
+}
+
+model Contacts {
+  id       Int    @id @default(autoincrement())
+  Phone_no String
+  userid   Int
+  user     Users  @relation(fields: [userid], references: [id], onDelete: Cascade)
+}
+
+model Users {
+  id                 Int                  @id @default(autoincrement())
+  username           String               @unique
+  Password           String
+  role               String
+  cart               Cart[]
+  contact            Contacts[]
+  feedback           Feedback[]
+  order              Order[]
+  orderstatuschanges OrderStatusHistory[]
+  payment            Payment[]
+  refreshtoken       RefreshToken[]
+  Product            product[]
+}
+
+model product {
+  id            Int         @id @default(autoincrement())
+  name          String?
+  price         Float
+  stock         Int
+  image         String?
+  createdAt     DateTime    @default(now())
+  userid        Int?
+  categoryId    Int?
+  reservedStock Int         @default(0)
+  cart          Cart[]
+  orderitem     OrderItem[]
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  user          Users?      @relation(fields: [userid], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IdempotencyKey {
+  keyId  String @id
+  status String
+}
+
+model Order {
+  id          Int                  @id @default(autoincrement())
+  userId      Int
+  paymentId   Int                  @unique
+  amountPaid  Float
+  createdAt   DateTime             @default(now())
+  status      OrderStatus          @default(PENDING)
+  Address     String?
+  City        String?
+  Name        String?
+  Phone       String?
+  postalCode  String?
+  payment     Payment              @relation(fields: [paymentId], references: [id])
+  user        Users                @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  orderstatus OrderStatusHistory[]
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  name      String
+  price     Float
+  quantity  Int
+  subtotal  Float
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   product @relation(fields: [productId], references: [id])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  products  product[]
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Payment {
+  id                Int             @id @default(autoincrement())
+  userId            Int
+  amount            Float
+  status            PaymentStatus   @default(PENDING)
+  method            PaymentMethod
+  provider          PaymentProvider
+  providerPaymentId String?         @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  order             Order?
+  user              Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderStatusHistory {
+  id        Int         @id @default(autoincrement())
+  orderId   Int
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+  changedby Int?
+ admin    Users?      @relation(fields: [changedby], references: [id])
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUND_PENDING
+  REFUNDED
+}
+
+enum PaymentMethod {
+  EASYPAISA
+  JAZZCASH
+}
+
+enum PaymentProvider {
+  EASYPAISA
+  JAZZCASH
+}

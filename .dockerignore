@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+project_1/node_modules
+
+# Environment variables
+.env
+.env.*
+project_1/.env
+project_1/.env.*
+
+# Git
+.git
+.gitignore
+
+# Logs
+logs
+*.log
+project_1/logs
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Test / coverage
+coverage
+.nyc_output
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Prisma generated/client files
+project_1/node_modules/.prisma
+project_1/node_modules/@prisma/client
+
+# Documentation / unnecessary files
+README.md

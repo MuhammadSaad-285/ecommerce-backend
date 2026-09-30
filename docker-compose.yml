@@ -1,0 +1,64 @@
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: project_1/Dockerfile
+    container_name: ecommerce-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:Saad%40285i@host.docker.internal:5432/A
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  order-worker:
+    build:
+      context: .
+      dockerfile: project_1/Dockerfile
+    container_name: order-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:Saad%40285i@host.docker.internal:5432/A
+    command: node project_1/worker/order_worker.js
+    depends_on:
+      - redis
+
+  refund-worker:
+    build:
+      context: .
+      dockerfile: project_1/Dockerfile
+    container_name: refund-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:Saad%40285i@host.docker.internal:5432/A
+    command: node project_1/worker/refund_worker.js
+    depends_on:
+      - redis
+
+  dlq-worker:
+    build:
+      context: .
+      dockerfile: project_1/Dockerfile
+    container_name: dlq-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:Saad%40285i@host.docker.internal:5432/A
+    command: node project_1/worker/dlq_worker.js
+    depends_on:
+      - redis
